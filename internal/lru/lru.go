@@ -23,7 +23,7 @@ type LRUCache struct {
 	cap        int
 	bucket     map[string]*Node
 	head, tail *Node
-	mu         *sync.RWMutex
+	mu         sync.RWMutex
 	ttl        time.Duration
 }
 
@@ -38,7 +38,7 @@ func (c *LRUCache) insert(node *Node) {
 	node.prev, node.next = prev, next
 }
 
-func NewLRUCache(capacity int, defaultTTL time.Duration) *LRUCache {
+func NewLRUCache(capacity int) *LRUCache {
 	head, tail := new(Node), new(Node)
 	head.next, tail.prev = tail, head
 
