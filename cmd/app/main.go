@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/instinctG/lru-cache/internal/config"
 	transportHTTP "github.com/instinctG/lru-cache/internal/http-server/handler"
-	"github.com/instinctG/lru-cache/internal/logger"
+	sl "github.com/instinctG/lru-cache/internal/logger"
 	"github.com/instinctG/lru-cache/internal/lru"
 	"log/slog"
 )
@@ -11,7 +11,7 @@ import (
 func Run() error {
 	cfg := config.MustLoad()
 
-	log := logger.SetupLogger(cfg.LogLevel)
+	log := sl.SetupLogger(cfg.LogLevel)
 
 	log.Info("starting lru-cache", slog.String("LOG-LEVEL", cfg.LogLevel))
 	log.Debug("debug messages are enabled")
@@ -32,6 +32,6 @@ func Run() error {
 
 func main() {
 	if err := Run(); err != nil {
-		slog.Error("could not run the application", logger.Err(err))
+		slog.Error("could not run the application", sl.Err(err))
 	}
 }
