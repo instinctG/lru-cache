@@ -10,7 +10,7 @@ import (
 	"github.com/fatih/color"
 )
 
-const layout = "[2006-01-02 15:04:05.999-07:00]"
+const layout = "[2006/01/02 15:04:05]"
 
 type PrettyHandlerOptions struct {
 	SlogOpts *slog.HandlerOptions

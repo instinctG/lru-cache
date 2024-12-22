@@ -2,16 +2,14 @@ package main
 
 import (
 	"github.com/instinctG/lru-cache/internal/config"
+	transportHTTP "github.com/instinctG/lru-cache/internal/http-server/handler"
 	"github.com/instinctG/lru-cache/internal/logger"
 	"log/slog"
 )
 
-func main() {
-
-	//TODO:init config : env
+func Run() error {
 	cfg := config.MustLoad()
 
-	//TODO: init logger : slog
 	log := logger.SetupLogger(cfg.LogLevel)
 
 	log.Info("starting lru-cache", slog.String("LOG-LEVEL", cfg.LogLevel))
@@ -19,7 +17,20 @@ func main() {
 
 	//TODO: init lru-cache : in-memory lru-cache
 
-	//TODO: init router : chi, "chi render"
+	handler := transportHTTP.NewHandler(cfg.Port, log)
 
-	//TODO: run server
+	if err := handler.Serve(); err != nil {
+		log.Error("failed to start server")
+		return err
+	}
+
+	log.Info("server started")
+
+	return nil
+}
+
+func main() {
+	if err := Run(); err != nil {
+		slog.Error("could not run the application", logger.Err(err))
+	}
 }
