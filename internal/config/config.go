@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 	"log"
@@ -23,7 +22,6 @@ func MustLoad() *Config {
 	//TODO : корректно доделать конфиг-path
 	flag.StringVar(&cfg.ConfigPath, "config-path", "config/local.env", "Path to the config file")
 
-	fmt.Println(cfg.ConfigPath)
 	if err := godotenv.Load(cfg.ConfigPath); err != nil {
 		log.Fatalf("error loading .env file: %s", err)
 	}
