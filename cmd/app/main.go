@@ -4,6 +4,7 @@ import (
 	"github.com/instinctG/lru-cache/internal/config"
 	transportHTTP "github.com/instinctG/lru-cache/internal/http-server/handler"
 	"github.com/instinctG/lru-cache/internal/logger"
+	"github.com/instinctG/lru-cache/internal/lru"
 	"log/slog"
 )
 
@@ -15,9 +16,9 @@ func Run() error {
 	log.Info("starting lru-cache", slog.String("LOG-LEVEL", cfg.LogLevel))
 	log.Debug("debug messages are enabled")
 
-	//TODO: init lru-cache : in-memory lru-cache
+	LRUCache := lru.NewLRUCache(cfg.CacheSize)
 
-	handler := transportHTTP.NewHandler(cfg.Port, log)
+	handler := transportHTTP.NewHandler(LRUCache, cfg.Port, log)
 
 	if err := handler.Serve(); err != nil {
 		log.Error("failed to start server")

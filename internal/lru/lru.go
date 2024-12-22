@@ -110,6 +110,10 @@ func (c *LRUCache) GetAll(ctx context.Context) (keys []string, values []interfac
 		node = node.next
 	}
 
+	if len(c.bucket) == 0 {
+		return nil, nil, errors.New("no elements found")
+	}
+
 	return keys, values, nil
 }
 

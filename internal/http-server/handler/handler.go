@@ -15,13 +15,15 @@ import (
 )
 
 type Handler struct {
+	LRU    ILRUCache
 	log    *slog.Logger
 	Router *chi.Mux
 	Server *http.Server
 }
 
-func NewHandler(address string, log *slog.Logger) *Handler {
+func NewHandler(lru ILRUCache, address string, log *slog.Logger) *Handler {
 	h := &Handler{
+		LRU:    lru,
 		log:    log,
 		Router: chi.NewRouter(),
 	}
@@ -44,7 +46,13 @@ func NewHandler(address string, log *slog.Logger) *Handler {
 }
 
 func (h *Handler) mapRoutes() {
+	h.Router.Post("/api/lru", h.Put)
 
+	h.Router.Get("/api/lru/{key}", h.Get)
+	h.Router.Get("/api/lru", h.GetAll)
+
+	h.Router.Delete("/api/lru/{key}", h.Evict)
+	h.Router.Delete("/api/lru", h.EvictAll)
 }
 
 func (h *Handler) Serve() error {
