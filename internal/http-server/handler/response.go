@@ -1,4 +1,3 @@
-// Package handler содержит функции для обработки ответов и ошибок валидации.
 package handler
 
 import (
@@ -15,7 +14,6 @@ type Response struct {
 	Error   string `json:"error,omitempty"`   // Описание ошибки.
 }
 
-// jsonRespond отправляет JSON-ответ с заданным статусом.
 func jsonRespond(w http.ResponseWriter, r *http.Request, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
@@ -26,7 +24,6 @@ func jsonRespond(w http.ResponseWriter, r *http.Request, statusCode int, data in
 func ValidationError(errs validator.ValidationErrors) Response {
 	var errMsgs []string
 
-	// Формируем сообщения для каждой ошибки валидации.
 	for _, err := range errs {
 		switch err.ActualTag() {
 		case "required":
@@ -36,7 +33,6 @@ func ValidationError(errs validator.ValidationErrors) Response {
 		}
 	}
 
-	// Возвращаем ошибку в виде строки.
 	return Response{
 		Error: strings.Join(errMsgs, ", "),
 	}

@@ -1,4 +1,3 @@
-// Package handler предоставляет обработчики для работы с LRU-кэшем через HTTP API.
 package handler
 
 import (
