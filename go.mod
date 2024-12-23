@@ -3,7 +3,6 @@ module github.com/instinctG/lru-cache
 go 1.23.3
 
 require (
-	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/fatih/color v1.18.0
 	github.com/go-chi/chi/v5 v5.2.0

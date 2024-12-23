@@ -66,15 +66,15 @@ func (h *Handler) Serve() error {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	sig := <-quit
 	start := time.Now()
 
-	h.Log.Info("Shutting down server...")
+	h.Log.Info("Received shutdown signal")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	h.Log.Info("Server shutdown complete", slog.String("shutdown_time", time.Since(start).String()))
+	h.Log.Info("Server shutdown complete", slog.String("shutdown_time", time.Since(start).String()), slog.String("signal", sig.String()))
 	if err := h.Server.Shutdown(ctx); err != nil {
 		h.Log.Error("Server Shutdown:", sl.Err(err))
 	}

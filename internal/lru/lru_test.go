@@ -109,3 +109,87 @@ func TestLRUCache_EvictAll(t *testing.T) {
 	assert.Nil(t, keys)
 	assert.Nil(t, values)
 }
+
+func TestLRUCache_PutExpiredItem(t *testing.T) {
+	ctx := context.Background()
+	cache := lru.NewLRUCache(2)
+
+	// Добавляем элемент с истекшим временем жизни
+	require.NoError(t, cache.Put(ctx, "key1", "value1", -time.Minute))
+
+	// Проверяем, что элемент не может быть получен
+	_, _, err := cache.Get(ctx, "key1")
+	assert.ErrorIs(t, err, lru.ErrKeyNotFound)
+}
+
+func TestLRUCache_EvictKeyNotFound(t *testing.T) {
+	ctx := context.Background()
+	cache := lru.NewLRUCache(2)
+
+	// Проверяем, что попытка удалить несуществующий ключ вернет ошибку
+	_, err := cache.Evict(ctx, "nonexistent")
+	assert.ErrorIs(t, err, lru.ErrKeyNotFound)
+}
+
+func TestLRUCache_LRUOrderAfterAccess(t *testing.T) {
+	ctx := context.Background()
+	cache := lru.NewLRUCache(3)
+
+	// Добавляем элементы
+	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
+	require.NoError(t, cache.Put(ctx, "key2", "value2", time.Minute))
+	require.NoError(t, cache.Put(ctx, "key3", "value3", time.Minute))
+
+	// Доступ к ключу "key1"
+	_, _, err := cache.Get(ctx, "key1")
+	require.NoError(t, err)
+
+	// Добавляем еще один элемент, "key2" должен быть удален
+	require.NoError(t, cache.Put(ctx, "key4", "value4", time.Minute))
+
+	_, _, err = cache.Get(ctx, "key2")
+	assert.ErrorIs(t, err, lru.ErrKeyNotFound)
+}
+
+func TestLRUCache_CapacityEvictionWithAccess(t *testing.T) {
+	ctx := context.Background()
+	cache := lru.NewLRUCache(2)
+
+	// Добавляем элементы
+	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
+	require.NoError(t, cache.Put(ctx, "key2", "value2", time.Minute))
+
+	// Доступ к элементу "key1" чтобы он стал недавно использованным
+	_, _, err := cache.Get(ctx, "key1")
+	require.NoError(t, err)
+
+	// Добавляем третий элемент, проверяем, что "key2" удалится
+	require.NoError(t, cache.Put(ctx, "key3", "value3", time.Minute))
+
+	_, _, err = cache.Get(ctx, "key2")
+	assert.ErrorIs(t, err, lru.ErrKeyNotFound)
+
+	value, _, err := cache.Get(ctx, "key1")
+	require.NoError(t, err)
+	assert.Equal(t, "value1", value)
+}
+
+func TestLRUCache_MaxCapacityWithEviction(t *testing.T) {
+	ctx := context.Background()
+	cache := lru.NewLRUCache(3)
+
+	// Добавляем элементы
+	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
+	require.NoError(t, cache.Put(ctx, "key2", "value2", time.Minute))
+	require.NoError(t, cache.Put(ctx, "key3", "value3", time.Minute))
+
+	// Добавляем еще один элемент, проверяем, что "key1" был удален
+	require.NoError(t, cache.Put(ctx, "key4", "value4", time.Minute))
+
+	_, _, err := cache.Get(ctx, "key1")
+	assert.ErrorIs(t, err, lru.ErrKeyNotFound)
+
+	value, _, err := cache.Get(ctx, "key2")
+	require.NoError(t, err)
+	assert.Equal(t, "value2", value)
+}
