@@ -1,7 +1,5 @@
-// Этот пакет реализован для работы тестов handler_test.go без паники(если бы не объявили логгер), и тут реализованы методы необходимые для того чтобы
-// просто игнорировать логи и не упасть в панику. В этом пакете методы это просто пустые оболочки, чтобы удовлетворить handler логгера
-//и чтобы вместо реального логгера можно было использовать DiscardLogger
-
+// Package logger реализует DiscardLogger для тестов, чтобы игнорировать логи
+// и не вызывать панику.  В этом пакете методы это просто пустые оболочки, чтобы удовлетворить handler логгера
 package logger
 
 import (
@@ -9,32 +7,35 @@ import (
 	"log/slog"
 )
 
+// NewDiscardLogger создает новый логгер, который игнорирует все логи.
 func NewDiscardLogger() *slog.Logger {
-	return slog.New(NewDiscardHandler())
+	return slog.New(NewDiscardHandler()) // Возвращает логгер с обработчиком, который не записывает логи.
 }
 
+// DiscardHandler - пустая структура
 type DiscardHandler struct{}
 
+// NewDiscardHandler создает новый обработчик, который игнорирует все записи.
 func NewDiscardHandler() *DiscardHandler {
 	return &DiscardHandler{}
 }
 
+// Handle игнорирует запись журнала, ничего не делает.
 func (h *DiscardHandler) Handle(_ context.Context, _ slog.Record) error {
-	// Просто игнорируем запись журнала
 	return nil
 }
 
+// WithAttrs возвращает тот же обработчик без изменения атрибутов.
 func (h *DiscardHandler) WithAttrs(_ []slog.Attr) slog.Handler {
-	// Возвращает тот же обработчик, так как нет атрибутов для сохранения
 	return h
 }
 
+// WithGroup возвращает тот же обработчик без изменения группы.
 func (h *DiscardHandler) WithGroup(_ string) slog.Handler {
-	// Возвращает тот же обработчик, так как нет группы для сохранения
 	return h
 }
 
+// Enabled всегда возвращает false, так как записи игнорируются.
 func (h *DiscardHandler) Enabled(_ context.Context, _ slog.Level) bool {
-	// Всегда возвращает false, так как запись журнала игнорируется
 	return false
 }

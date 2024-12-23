@@ -1,3 +1,4 @@
+// Package handler предоставляет функциональность для управления HTTP-сервером и обработкой маршрутов.
 package handler
 
 import (
@@ -15,13 +16,21 @@ import (
 	"time"
 )
 
+// Handler представляет структуру для обработки HTTP-запросов и управления сервером.
 type Handler struct {
-	LRU    ILRUCache
-	Log    *slog.Logger
-	Router *chi.Mux
-	Server *http.Server
+	LRU    ILRUCache    // Интерфейс LRU-кэша для обработки запросов.
+	Log    *slog.Logger // Логгер для записи событий сервера.
+	Router *chi.Mux     // Роутер для маршрутизации запросов.
+	Server *http.Server // HTTP-сервер.
 }
 
+// NewHandler создает новый экземпляр Handler.
+// Параметры:
+//   - lru: реализация интерфейса LRU-кэша.
+//   - address: адрес для запуска HTTP-сервера (например, "localhost:8080").
+//   - log: логгер для обработки событий.
+//
+// Возвращает: указатель на созданный Handler.
 func NewHandler(lru ILRUCache, address string, log *slog.Logger) *Handler {
 	h := &Handler{
 		LRU:    lru,
@@ -29,14 +38,13 @@ func NewHandler(lru ILRUCache, address string, log *slog.Logger) *Handler {
 		Router: chi.NewRouter(),
 	}
 
-	h.Router.Use(middleware.RequestID)
-	//Можно использовать logger от chi, но для более подробного ответа и удобства написал свой
-	//h.Router.Use(middleware.Logger)
-	h.Router.Use(logger.New(log))
-	h.Router.Use(middleware.Recoverer)
-	h.Router.Use(middleware.URLFormat)
+	// Настройка middleware
+	h.Router.Use(middleware.RequestID) // Генерация идентификаторов запросов.
+	h.Router.Use(logger.New(log))      // Логирование запросов.
+	h.Router.Use(middleware.Recoverer) // Восстановление после паники.
+	h.Router.Use(middleware.URLFormat) // Поддержка форматов URL.
 
-	h.mapRoutes()
+	h.mapRoutes() // Настройка маршрутов.
 
 	h.Server = &http.Server{
 		Addr:    address,
@@ -46,24 +54,28 @@ func NewHandler(lru ILRUCache, address string, log *slog.Logger) *Handler {
 	return h
 }
 
+// mapRoutes настраивает маршруты HTTP-обработчиков.
 func (h *Handler) mapRoutes() {
-	h.Router.Post("/api/lru", h.Put)
-
-	h.Router.Get("/api/lru/{key}", h.Get)
-	h.Router.Get("/api/lru", h.GetAll)
-
-	h.Router.Delete("/api/lru/{key}", h.Evict)
-	h.Router.Delete("/api/lru", h.EvictAll)
+	h.Router.Post("/api/lru", h.Put)           // Добавление или обновление элемента в кэше.
+	h.Router.Get("/api/lru/{key}", h.Get)      // Получение элемента по ключу.
+	h.Router.Get("/api/lru", h.GetAll)         // Получение всех элементов кэша.
+	h.Router.Delete("/api/lru/{key}", h.Evict) // Удаление элемента по ключу.
+	h.Router.Delete("/api/lru", h.EvictAll)    // Удаление всех элементов кэша.
 }
 
+// Serve запускает HTTP-сервер и обрабатывает сигналы завершения работы.
+// Возвращает: ошибку в случае, если сервер не может быть запущен.
 func (h *Handler) Serve() error {
 	h.Log.Info("starting server on port: " + h.Server.Addr)
+
+	// Запуск сервера в отдельной горутине
 	go func() {
 		if err := h.Server.ListenAndServe(); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
+	// Ожидание сигнала завершения (graceful shutdown)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-quit
@@ -71,6 +83,7 @@ func (h *Handler) Serve() error {
 
 	h.Log.Info("Received shutdown signal")
 
+	// Завершение работы сервера с таймаутом
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -79,7 +92,7 @@ func (h *Handler) Serve() error {
 		h.Log.Error("Server Shutdown:", sl.Err(err))
 	}
 
-	// catching ctx.Done(). timeout of 5 seconds.
+	// Обработка завершения контекста
 	select {
 	case <-ctx.Done():
 		h.Log.Debug("timeout of 5 seconds.")

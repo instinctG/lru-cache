@@ -11,7 +11,7 @@ import (
 
 func TestLRUCache_PutAndGet(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(2)
+	cache := lru.NewLRUCache(2, 10)
 
 	// Добавляем элемент в кэш
 	err := cache.Put(ctx, "key1", "value1", time.Minute)
@@ -31,7 +31,7 @@ func TestLRUCache_PutAndGet(t *testing.T) {
 
 func TestLRUCache_GetKeyNotFound(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(2)
+	cache := lru.NewLRUCache(2, 10)
 
 	// Проверяем, что элемент отсутствует в пустом кэше
 	_, _, err := cache.Get(ctx, "nonexistent")
@@ -40,7 +40,7 @@ func TestLRUCache_GetKeyNotFound(t *testing.T) {
 
 func TestLRUCache_CapacityEviction(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(2)
+	cache := lru.NewLRUCache(2, 10)
 
 	// Добавляем элементы в кэш
 	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
@@ -59,7 +59,7 @@ func TestLRUCache_CapacityEviction(t *testing.T) {
 
 func TestLRUCache_GetAll(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(3)
+	cache := lru.NewLRUCache(3, 10)
 
 	// Добавляем элементы
 	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
@@ -75,7 +75,7 @@ func TestLRUCache_GetAll(t *testing.T) {
 
 func TestLRUCache_Evict(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(2)
+	cache := lru.NewLRUCache(2, 10)
 
 	// Добавляем элемент
 	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
@@ -92,7 +92,7 @@ func TestLRUCache_Evict(t *testing.T) {
 
 func TestLRUCache_EvictAll(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(3)
+	cache := lru.NewLRUCache(3, 10)
 
 	// Добавляем элементы
 	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
@@ -112,7 +112,7 @@ func TestLRUCache_EvictAll(t *testing.T) {
 
 func TestLRUCache_PutExpiredItem(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(2)
+	cache := lru.NewLRUCache(2, 10)
 
 	// Добавляем элемент с истекшим временем жизни
 	require.NoError(t, cache.Put(ctx, "key1", "value1", -time.Minute))
@@ -124,7 +124,7 @@ func TestLRUCache_PutExpiredItem(t *testing.T) {
 
 func TestLRUCache_EvictKeyNotFound(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(2)
+	cache := lru.NewLRUCache(2, 10)
 
 	// Проверяем, что попытка удалить несуществующий ключ вернет ошибку
 	_, err := cache.Evict(ctx, "nonexistent")
@@ -133,7 +133,7 @@ func TestLRUCache_EvictKeyNotFound(t *testing.T) {
 
 func TestLRUCache_LRUOrderAfterAccess(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(3)
+	cache := lru.NewLRUCache(3, 10)
 
 	// Добавляем элементы
 	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
@@ -153,7 +153,7 @@ func TestLRUCache_LRUOrderAfterAccess(t *testing.T) {
 
 func TestLRUCache_CapacityEvictionWithAccess(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(2)
+	cache := lru.NewLRUCache(2, 10)
 
 	// Добавляем элементы
 	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
@@ -176,7 +176,7 @@ func TestLRUCache_CapacityEvictionWithAccess(t *testing.T) {
 
 func TestLRUCache_MaxCapacityWithEviction(t *testing.T) {
 	ctx := context.Background()
-	cache := lru.NewLRUCache(3)
+	cache := lru.NewLRUCache(3, 10)
 
 	// Добавляем элементы
 	require.NoError(t, cache.Put(ctx, "key1", "value1", time.Minute))
