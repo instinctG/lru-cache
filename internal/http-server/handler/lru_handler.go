@@ -46,6 +46,14 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 
 	h.Log.Debug("request body decoded", slog.Any("request", req))
 
+	if !isSimpleType(req.Value) {
+		h.Log.Debug("value must be a simple type")
+
+		jsonRespond(w, r, http.StatusBadRequest, Response{Error: "field value is invalid"})
+
+		return
+	}
+
 	// Проверяем валидность данных.
 	if err = validator.New().Struct(req); err != nil {
 

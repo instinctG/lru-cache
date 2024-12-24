@@ -37,3 +37,12 @@ func ValidationError(errs validator.ValidationErrors) Response {
 		Error: strings.Join(errMsgs, ", "),
 	}
 }
+
+func isSimpleType(value interface{}) bool {
+	switch value.(type) {
+	case string, float64, int, bool:
+		return true
+	default:
+		return false
+	}
+}

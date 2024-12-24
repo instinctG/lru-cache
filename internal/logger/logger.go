@@ -23,7 +23,7 @@ func SetupLogger(logLevel string) *slog.Logger {
 		log = setupPrettySlog() // Настройка для отладочного режима.
 	case INFO:
 		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	case ERROR:
 		log = slog.New(
 			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError}))
