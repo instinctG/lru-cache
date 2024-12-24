@@ -129,7 +129,7 @@ Ctrl+C
 ### Dockerfile:
 Сбилдить docker контейнер:
 ```sh
-docket build -t lru .
+docker build -t lru .
 ```
 
 Запуск контейнера:
