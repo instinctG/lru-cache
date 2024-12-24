@@ -1,3 +1,4 @@
+// Package main - точка входа в наш сервис, тут мы запускаем сервис кэша.
 package main
 
 import (

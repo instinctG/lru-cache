@@ -1,4 +1,4 @@
-// Package logger содержит логику настройки логирования для приложения.
+// Package logger содержит логику настройки логирования для сервиса.
 package logger
 
 import (
@@ -8,9 +8,9 @@ import (
 
 // Уровень логирования: ERROR, DEBUG, INFO
 const (
-	DEBUG = "DEBUG"
-	INFO  = "INFO"
-	ERROR = "ERROR"
+	DEBUG = "DEBUG" // DEBUG - log level который отображает все логи
+	INFO  = "INFO"  // INFO - отображает все логи кроме DEBUG
+	ERROR = "ERROR" // ERROR - отображает только логи уровня ERROR
 )
 
 // SetupLogger настраивает логгер в зависимости от заданного уровня логирования.
@@ -29,7 +29,7 @@ func SetupLogger(logLevel string) *slog.Logger {
 			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelError}))
 	default:
 		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelWarn})) // По умолчанию уровень WARNING.
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelWarn})) // По умолчанию уровень WARNING.
 	}
 
 	return log

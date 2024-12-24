@@ -5,7 +5,6 @@ RUN apk update && apk add --no-cache git
 WORKDIR /app
 
 COPY go.mod go.sum ./
-ENV CONFIG_PATH="/app/config/local.env"
 
 RUN go mod download
 

@@ -1,4 +1,3 @@
-// Package logger реализует PrettyHandler для красивого вывода логов с цветами и форматированием.
 package logger
 
 import (

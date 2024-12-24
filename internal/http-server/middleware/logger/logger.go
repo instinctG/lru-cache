@@ -1,5 +1,5 @@
-// Package logger предоставляет функциональность для логирования HTTP-запросов.
-package logger
+// Package mw_logger предоставляет функциональность для логирования HTTP-запросов.
+package mw_logger
 
 import (
 	"log/slog"
@@ -39,7 +39,7 @@ func New(log *slog.Logger) func(next http.Handler) http.Handler {
 			t1 := time.Now()
 			defer func() {
 				// Логируем завершение обработки запроса
-				entry.Info("request completed",
+				entry.Debug("request completed",
 					slog.Int("status", ww.Status()),
 					slog.Int("bytes", ww.BytesWritten()),
 					slog.String("duration", time.Since(t1).String()),

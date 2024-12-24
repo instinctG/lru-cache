@@ -37,21 +37,21 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	err := render.DecodeJSON(r.Body, &req)
 	if errors.Is(err, io.EOF) {
 
-		h.Log.Error("request body is empty")
+		h.Log.Debug("request body is empty")
 
 		render.JSON(w, r, Response{Error: err.Error()})
 
 		return
 	}
 
-	h.Log.Info("request body decoded", slog.Any("request", req))
+	h.Log.Debug("request body decoded", slog.Any("request", req))
 
 	// Проверяем валидность данных.
 	if err = validator.New().Struct(req); err != nil {
 
 		validateErr := err.(validator.ValidationErrors)
 
-		h.Log.Error("invalid request", sl.Err(validateErr))
+		h.Log.Debug("invalid request", sl.Err(validateErr))
 
 		jsonRespond(w, r, http.StatusBadRequest, ValidationError(validateErr))
 
@@ -62,14 +62,14 @@ func (h *Handler) Put(w http.ResponseWriter, r *http.Request) {
 	err = h.LRU.Put(r.Context(), req.Key, req.Value, time.Duration(req.TTLSeconds)*time.Second)
 	if err != nil {
 
-		h.Log.Error("failed to put lru cache", sl.Err(err))
+		h.Log.Debug("failed to put lru cache", sl.Err(err))
 
 		jsonRespond(w, r, http.StatusInternalServerError, Response{Error: err.Error()})
 
 		return
 	}
 
-	h.Log.Info("cache added successfully")
+	h.Log.Debug("cache added successfully")
 
 	jsonRespond(w, r, http.StatusCreated, Response{Message: "cache added"})
 }
@@ -79,7 +79,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
 	if key == "" {
 
-		h.Log.Error("key is empty")
+		h.Log.Debug("key is empty")
 
 		jsonRespond(w, r, http.StatusBadRequest, Response{Error: "key is empty"})
 
@@ -89,7 +89,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	val, exp, err := h.LRU.Get(r.Context(), key)
 	if errors.Is(err, lru.ErrKeyNotFound) {
 
-		h.Log.Error("key not found", sl.Err(err))
+		h.Log.Debug("key not found", sl.Err(err))
 
 		jsonRespond(w, r, http.StatusNotFound, Response{Error: "key not found"})
 
@@ -110,7 +110,7 @@ func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
 	keys, vals, err := h.LRU.GetAll(r.Context())
 	if err != nil {
 
-		h.Log.Error("failed to get lru cache", sl.Err(err))
+		h.Log.Debug("failed to get lru cache", sl.Err(err))
 
 		jsonRespond(w, r, http.StatusNoContent, nil)
 
@@ -130,7 +130,7 @@ func (h *Handler) Evict(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
 	if key == "" {
 
-		h.Log.Error("key is empty")
+		h.Log.Debug("key is empty")
 
 		jsonRespond(w, r, http.StatusBadRequest, Response{Error: "key is empty"})
 
@@ -140,14 +140,14 @@ func (h *Handler) Evict(w http.ResponseWriter, r *http.Request) {
 	_, err := h.LRU.Evict(r.Context(), key)
 	if errors.Is(err, lru.ErrKeyNotFound) {
 
-		h.Log.Error("key not found", sl.Err(err))
+		h.Log.Debug("key not found", sl.Err(err))
 
 		jsonRespond(w, r, http.StatusNotFound, Response{Error: "key not found"})
 
 		return
 	}
 
-	h.Log.Info("key is evicted")
+	h.Log.Debug("key is evicted")
 
 	jsonRespond(w, r, http.StatusNoContent, nil)
 }
@@ -157,14 +157,14 @@ func (h *Handler) EvictAll(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.LRU.EvictAll(r.Context()); err != nil {
 
-		h.Log.Error("failed to evict lru cache", sl.Err(err))
+		h.Log.Debug("failed to evict lru cache", sl.Err(err))
 
 		jsonRespond(w, r, http.StatusInternalServerError, Response{Error: err.Error()})
 
 		return
 	}
 
-	h.Log.Info("all cache evicted successfully")
+	h.Log.Debug("all cache evicted successfully")
 
 	jsonRespond(w, r, http.StatusNoContent, nil)
 }

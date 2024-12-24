@@ -5,7 +5,7 @@ import (
 	"context"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/instinctG/lru-cache/internal/http-server/middleware/logger"
+	logger "github.com/instinctG/lru-cache/internal/http-server/middleware/logger"
 	sl "github.com/instinctG/lru-cache/internal/logger"
 	"log"
 	"log/slog"
@@ -40,11 +40,12 @@ func NewHandler(lru ILRUCache, address string, log *slog.Logger) *Handler {
 
 	// Настройка middleware
 	h.Router.Use(middleware.RequestID) // Генерация идентификаторов запросов.
+	//h.Router.Use(middleware.Logger)  //Можно использовать логгер от chi, но решил написать свой для удобства логов
 	h.Router.Use(logger.New(log))      // Логирование запросов.
 	h.Router.Use(middleware.Recoverer) // Восстановление после паники.
 	h.Router.Use(middleware.URLFormat) // Поддержка форматов URL.
 
-	h.mapRoutes() // Настройка маршрутов.
+	h.mapRoutes()
 
 	h.Server = &http.Server{
 		Addr:    address,
@@ -54,21 +55,21 @@ func NewHandler(lru ILRUCache, address string, log *slog.Logger) *Handler {
 	return h
 }
 
-// mapRoutes настраивает маршруты HTTP-обработчиков.
 func (h *Handler) mapRoutes() {
-	h.Router.Post("/api/lru", h.Put)           // Добавление или обновление элемента в кэше.
-	h.Router.Get("/api/lru/{key}", h.Get)      // Получение элемента по ключу.
-	h.Router.Get("/api/lru", h.GetAll)         // Получение всех элементов кэша.
-	h.Router.Delete("/api/lru/{key}", h.Evict) // Удаление элемента по ключу.
-	h.Router.Delete("/api/lru", h.EvictAll)    // Удаление всех элементов кэша.
+	h.Router.Post("/api/lru", h.Put)
+
+	h.Router.Get("/api/lru/{key}", h.Get)
+	h.Router.Get("/api/lru", h.GetAll)
+
+	h.Router.Delete("/api/lru/{key}", h.Evict)
+	h.Router.Delete("/api/lru", h.EvictAll)
 }
 
-// Serve запускает HTTP-сервер и обрабатывает сигналы завершения работы.
+// Serve запускает HTTP-сервер и обрабатывает сигналы завершения работы(graceful-shutdown).
 // Возвращает: ошибку в случае, если сервер не может быть запущен.
 func (h *Handler) Serve() error {
 	h.Log.Info("starting server on port: " + h.Server.Addr)
 
-	// Запуск сервера в отдельной горутине
 	go func() {
 		if err := h.Server.ListenAndServe(); err != nil {
 			log.Fatal(err)

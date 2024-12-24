@@ -8,7 +8,6 @@ import (
 	"time"
 )
 
-// ErrKeyNotFound возвращается, если ключ не найден в кэше.
 var (
 	ErrCacheIsEmpty = errors.New("cache is empty") // ErrCacheIsEmpty возвращается, если кэш пустой.
 	ErrKeyNotFound  = errors.New("key not found")  // ErrKeyNotFound возвращается, если ключ не найден в кэше.
@@ -25,11 +24,11 @@ type Node struct {
 
 // Cache представляет кэш с вытеснением по принципу LRU.
 type Cache struct {
-	cap        int              // Максимальная емкость кэша.
-	bucket     map[string]*Node // Хранилище для элементов кэша.
-	head, tail *Node            // Начало и конец двусвязного списка.
-	mu         sync.RWMutex     // Мьютекс для обеспечения потокобезопасности.
-	ttl        time.Duration    // Время жизни элемента по умолчанию.
+	Cap        int              // Максимальная емкость кэша.
+	Bucket     map[string]*Node // Хранилище для элементов кэша.
+	Head, Tail *Node            // Начало и конец двусвязного списка.
+	Mu         sync.RWMutex     // Мьютекс для обеспечения потокобезопасности.
+	TTL        time.Duration    // Время жизни элемента по умолчанию.
 }
 
 func (c *Cache) remove(node *Node) {
@@ -38,7 +37,7 @@ func (c *Cache) remove(node *Node) {
 }
 
 func (c *Cache) insert(node *Node) {
-	prev, next := c.tail.prev, c.tail
+	prev, next := c.Tail.prev, c.Tail
 	prev.next, next.prev = node, node
 	node.prev, node.next = prev, next
 }
@@ -49,34 +48,34 @@ func NewLRUCache(capacity int, ttl time.Duration) *Cache {
 	head.next, tail.prev = tail, head
 
 	return &Cache{
-		cap:    capacity,
-		bucket: make(map[string]*Node),
-		head:   head,
-		tail:   tail,
-		ttl:    ttl,
+		Cap:    capacity,
+		Bucket: make(map[string]*Node),
+		Head:   head,
+		Tail:   tail,
+		TTL:    ttl,
 	}
 }
 
 // Put добавляет элемент в кэш. Если ключ уже существует, элемент и TTL обновляется.
 // Если емкость превышена, самый старый элемент удаляется.
 func (c *Cache) Put(ctx context.Context, key string, value interface{}, ttl time.Duration) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Mu.Lock()
+	defer c.Mu.Unlock()
 
 	if ttl == 0 {
-		ttl = c.ttl
+		ttl = c.TTL
 	}
 	expiresAt := time.Now().Add(ttl)
 
-	if node, exists := c.bucket[key]; exists {
+	if node, exists := c.Bucket[key]; exists {
 		c.remove(node)
 	}
 
-	c.bucket[key] = &Node{key, value, expiresAt, nil, nil}
-	c.insert(c.bucket[key])
+	c.Bucket[key] = &Node{key, value, expiresAt, nil, nil}
+	c.insert(c.Bucket[key])
 
-	if len(c.bucket) > c.cap {
-		lru := c.head.next
+	if len(c.Bucket) > c.Cap {
+		lru := c.Head.next
 		c.evictElement(lru)
 	}
 
@@ -86,10 +85,10 @@ func (c *Cache) Put(ctx context.Context, key string, value interface{}, ttl time
 // Get возвращает значение и время истечения для указанного ключа.
 // Если ключ отсутствует или истек, возвращается ошибка.
 func (c *Cache) Get(ctx context.Context, key string) (value interface{}, expiresAt time.Time, err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Mu.Lock()
+	defer c.Mu.Unlock()
 
-	node, exists := c.bucket[key]
+	node, exists := c.Bucket[key]
 	if !exists {
 		return nil, time.Time{}, ErrKeyNotFound
 	}
@@ -107,12 +106,12 @@ func (c *Cache) Get(ctx context.Context, key string) (value interface{}, expires
 // GetAll возвращает все ключи и значения, которые еще не истекли.
 // Если кэш пуст, возвращается ошибка.
 func (c *Cache) GetAll(ctx context.Context) (keys []string, values []interface{}, err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Mu.Lock()
+	defer c.Mu.Unlock()
 
-	node := c.head.next
+	node := c.Head.next
 
-	for node != c.tail {
+	for node != c.Tail {
 		if !node.IsExpired() {
 			keys = append(keys, node.key)
 			values = append(values, node.value)
@@ -122,7 +121,7 @@ func (c *Cache) GetAll(ctx context.Context) (keys []string, values []interface{}
 		node = node.next
 	}
 
-	if len(c.bucket) == 0 {
+	if len(c.Bucket) == 0 {
 		return nil, nil, ErrCacheIsEmpty
 	}
 
@@ -132,10 +131,10 @@ func (c *Cache) GetAll(ctx context.Context) (keys []string, values []interface{}
 // Evict удаляет указанный ключ из кэша и возвращает его значение.
 // Если ключ отсутствует или истек, возвращается ошибка ErrKeyNotFound.
 func (c *Cache) Evict(ctx context.Context, key string) (value interface{}, err error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Mu.Lock()
+	defer c.Mu.Unlock()
 
-	node, exists := c.bucket[key]
+	node, exists := c.Bucket[key]
 	if !exists {
 		return nil, ErrKeyNotFound
 	}
@@ -151,11 +150,11 @@ func (c *Cache) Evict(ctx context.Context, key string) (value interface{}, err e
 
 // EvictAll удаляет все элементы из кэша.
 func (c *Cache) EvictAll(ctx context.Context) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.Mu.Lock()
+	defer c.Mu.Unlock()
 
-	c.bucket = make(map[string]*Node)
-	c.head.next, c.tail.prev = c.tail, c.head
+	c.Bucket = make(map[string]*Node)
+	c.Head.next, c.Tail.prev = c.Tail, c.Head
 
 	return nil
 }
@@ -163,8 +162,7 @@ func (c *Cache) EvictAll(ctx context.Context) error {
 // IsExpired проверяет, истек ли срок действия элемента.
 func (n *Node) IsExpired() bool { return time.Now().After(n.expiresAt) }
 
-// evictElement удаляет элемент из кэша.
 func (c *Cache) evictElement(node *Node) {
 	c.remove(node)
-	delete(c.bucket, node.key)
+	delete(c.Bucket, node.key)
 }

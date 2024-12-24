@@ -1,5 +1,3 @@
-// Package logger реализует DiscardLogger для тестов, чтобы игнорировать логи
-// и не вызывать панику.  В этом пакете методы это просто пустые оболочки, чтобы удовлетворить handler логгера
 package logger
 
 import (
@@ -7,12 +5,12 @@ import (
 	"log/slog"
 )
 
-// NewDiscardLogger создает новый логгер, который игнорирует все логи.
+// NewDiscardLogger создает новый логгер для тестов и не вызывать панику при запуске тестов, который игнорирует все логи.
 func NewDiscardLogger() *slog.Logger {
 	return slog.New(NewDiscardHandler()) // Возвращает логгер с обработчиком, который не записывает логи.
 }
 
-// DiscardHandler - пустая структура
+// DiscardHandler - пустая структура, которая удовлетворяет handler логгера slog
 type DiscardHandler struct{}
 
 // NewDiscardHandler создает новый обработчик, который игнорирует все записи.

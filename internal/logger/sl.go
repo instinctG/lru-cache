@@ -1,4 +1,3 @@
-// Package logger содержит функции для работы с логированием ошибок.
 package logger
 
 import (
